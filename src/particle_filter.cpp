@@ -17,14 +17,10 @@
 
 #include "particle_filter.h"
 
-
+using namespace std;
 using std::normal_distribution;
 using std::default_random_engine;
-
 using vector_t = std::vector<double>;
-
-
-using namespace std;
 
 default_random_engine gen;
 
@@ -122,7 +118,6 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
 
 }
 
-
 const LandmarkObs ParticleFilter::transCoordsFromCarToMap(const LandmarkObs& obs, const Particle& p)
 {
   LandmarkObs out;
@@ -134,6 +129,15 @@ const LandmarkObs ParticleFilter::transCoordsFromCarToMap(const LandmarkObs& obs
   return out;
 }
 
+const double ParticleFilter::multivariateGaussian(const LandmarkObs& obs, const LandmarkObs &lm, const double sigma[])
+{
+  double cov_x = sigma[0]*sigma[0];
+  double cov_y = sigma[1]*sigma[1];
+  double gauss_norm = 1/(2.0*M_PI*sigma[0]*sigma[1]);
+  double dx = (obs.x - lm.x);
+  double dy = (obs.y - lm.y);
+  return exp(-(dx*dx/(2*cov_x) + dy*dy/(2*cov_y)))*gauss_norm;
+}
 
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[], 
 		std::vector<LandmarkObs> observations, Map map_landmarks) {
@@ -148,7 +152,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 	//   3.33
 	//   http://planning.cs.uiuc.edu/node99.html
 
-	double sigma_landmark [2] = {0.3, 0.3}; // Landmark measurement uncertainty [x [m], y [m]]
+  double sigma_landmark [2] = {0.3, 0.3}; // Landmark measurement uncertainty [x [m], y [m]]
 
   for(unsigned p_ctr=0; p_ctr < particles.size(); p_ctr++)
   {
@@ -187,13 +191,13 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
       // Assume sorted by id and starting at 1
       auto assoc_lm = predicted_landmarks[obs.id];
 
-      double pdf = gaussian2D(obs, assoc_lm, sigma_landmark);
+      double pdf = multivariateGaussian(obs, assoc_lm, sigma_landmark);
       total_prob *= pdf;
     }
     particles[p_ctr].weight = total_prob;
     weights[p_ctr] = total_prob;
   }
-  std::cout<<std::endl;
+
 }
 
 void ParticleFilter::resample() {

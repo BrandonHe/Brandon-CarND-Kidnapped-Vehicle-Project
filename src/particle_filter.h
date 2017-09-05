@@ -80,12 +80,20 @@ public:
 	 */
 	void dataAssociation(std::vector<LandmarkObs> predicted, std::vector<LandmarkObs>& observations);
 
-		/**
+	/**
 	 * transCoordsFromCarToMap Transform observed car coordinate system into map coordinates
 	 * @param obs Car observation coordinates(obs.x, obs.y)
 	 * @param p Map particle coordinates
 	 */
 	const LandmarkObs transCoordsFromCarToMap(const LandmarkObs& obs, const Particle& p);
+
+	/**
+ 	* multivariateGaussian Calculate particle weight(probability)
+ 	* @param obs Observations in map coordinates
+ 	* @param lm Observations of the nearest landmarks
+ 	* @param sigma The standard deviation for obs
+ 	*/
+	const double multivariateGaussian(const LandmarkObs& obs, const LandmarkObs &lm, const double sigma[]);
 	
 	/**
 	 * updateWeights Updates the weights for each particle based on the likelihood of the 
@@ -122,14 +130,5 @@ public:
 	}
 };
 
-inline const double gaussian2D(const LandmarkObs& obs, const LandmarkObs &lm, const double sigma[])
-{
-  auto cov_x = sigma[0]*sigma[0];
-  auto cov_y = sigma[1]*sigma[1];
-  auto normalizer = 2.0*M_PI*sigma[0]*sigma[1];
-  auto dx = (obs.x - lm.x);
-  auto dy = (obs.y - lm.y);
-  return exp(-(dx*dx/(2*cov_x) + dy*dy/(2*cov_y)))/normalizer;
-}
 
 #endif /* PARTICLE_FILTER_H_ */
